@@ -13,7 +13,7 @@ Audio files (wav / mp3 / m4a / flac)
     └─► Combine & normalize
         └─► Speaker diarization       (pyannote.audio)
             └─► ASR transcription     (IndicConformer)
-                └─► Translation       (Sarvam AI)
+                └─► Translation       (sarvam-translate)
                     └─► Extraction    (LLM-based: insights, participants, terminology, metadata, conclusion)
                         └─► PDF Report (ReportLab)
 ```
@@ -24,7 +24,7 @@ Audio files (wav / mp3 / m4a / flac)
 
 - **Multi-speaker diarization** - identifies and separates speakers using `pyannote.audio`
 - **Indic ASR** - transcribes speech in 10 Indian languages via `IndicConformer`
-- **Neural machine translation** - translates Indic-language transcripts to English using Sarvam AI
+- **Neural machine translation** - translates Indic-language transcripts to English using sarvam-translate
 - **LLM-based extraction** - concurrently extracts farmer questions, challenges, participant info, domain terminology, meeting metadata, and a narrative conclusion
 - **PDF report generation** - assembles all extracted content into a formatted report using ReportLab
 - **Resumable pipeline** - skip any completed stage (`--skip_combine`, `--skip_asr`, `--skip_translation`) to avoid re-running expensive steps
@@ -64,7 +64,8 @@ outreach-report-generator/
 │   ├── transcript/
 │   │   └── builder.py             # Builds & serializes structured transcripts
 │   ├── translation/
-│   │   └── sarvam_translate.py    # Sarvam AI translation (Indic → English)
+│   │   └── indictrans2.py         # indictrans2 translation (Indic → English)
+│   │   └── sarvam_translate.py    # sarvam-translate translation (Indic → English)
 │   ├── extraction/
 │   │   ├── base_llm.py            # Shared LLM model loader
 │   │   ├── insights.py            # Farmer questions & challenges extractor
@@ -125,7 +126,6 @@ The pipeline uses the following external services that require credentials:
 | Service | Purpose | Where to obtain |
 |---------|---------|-----------------|
 | **pyannote.audio** | Speaker diarization model (gated on HuggingFace) | [hf.co/pyannote/speaker-diarization](https://huggingface.co/pyannote/speaker-diarization-3.1) - accept terms & generate a token |
-| **Sarvam AI** | Indic-language translation | [sarvam.ai](https://www.sarvam.ai) |
 | **HuggingFace Hub** | Model downloads (IndicConformer, IndicTrans2) | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) |
 
 ---
@@ -181,7 +181,7 @@ All audio files in `--input_dir` are combined into a single normalized WAV file 
 `IndicConformer` transcribes each speaker segment in the source Indic language, producing a structured raw transcript (`transcript_raw.json`).
 
 ### Stage 4 - Translation
-Sarvam AI translates each transcript segment from the source Indic language to English, producing `transcript_translated.json`.
+`sarvam-translate` translates each transcript segment from the source Indic language to English, producing `transcript_translated.json`.
 
 ### Stage 5 - Extraction (Concurrent)
 An LLM processes the translated transcript to concurrently extract:
@@ -224,10 +224,6 @@ All outputs are saved to `--output_dir` (default: `./outputs`):
 | `python-dotenv` | Environment variable management |
 
 See `requirements.txt` for the full pinned dependency list.
-
----
-
-Here’s a clean, brief **Future Improvements / Limitations** section you can append:
 
 ---
 
