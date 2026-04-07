@@ -6,8 +6,10 @@ into a single 16kHz mono WAV ready for ASR + diarization.
 import glob
 import os
 
+import numpy as np
+import soundfile as sf
 import torch
-import torchaudio
+from pydub import AudioSegment
 
 
 # =============================================================================
@@ -48,15 +50,18 @@ def get_sorted_files(directory: str) -> list[str]:
 
 def load_and_normalize(path: str, target_sr: int = 16000) -> torch.Tensor:
     """Load an audio file, convert to mono, and resample to target_sr."""
-    wav, sr = torchaudio.load(path)
+    audio = AudioSegment.from_file(path)
+    audio = audio.set_channels(1).set_frame_rate(target_sr)
+    
+    samples = np.array(audio.get_array_of_samples())
+    if audio.sample_width == 2:
+        samples = samples.astype(np.float32) / 32768.0
+    elif audio.sample_width == 4:
+        samples = samples.astype(np.float32) / 2147483648.0
+    else:
+        samples = (samples.astype(np.float32) - 128.0) / 128.0
 
-    if wav.shape[0] > 1:
-        wav = torch.mean(wav, dim=0, keepdim=True)  # stereo → mono
-
-    if sr != target_sr:
-        resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr)
-        wav = resampler(wav)
-
+    wav = torch.from_numpy(samples).unsqueeze(0)
     return wav  # shape: (1, samples)
 
 
@@ -89,12 +94,12 @@ def combine_audio(
     total_duration = combined.shape[1] / target_sr
     print(f"\nCombined duration: {total_duration:.2f}s")
 
-    torchaudio.save(
+    # Write using soundfile to completely bypass torchaudio.save
+    sf.write(
         output_path,
-        combined,
-        sample_rate=target_sr,
-        encoding="PCM_S",
-        bits_per_sample=16,
+        combined.squeeze(0).numpy(),
+        target_sr,
+        subtype="PCM_16",
     )
     print(f"Saved → {output_path}")
     return output_path

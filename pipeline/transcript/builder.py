@@ -13,8 +13,8 @@ List[Dict] transcript schema:
 
 import json
 
+import soundfile as sf
 import torch
-import torchaudio
 
 from pipeline.asr.whisper_asr import transcribe_chunk
 
@@ -25,13 +25,17 @@ from pipeline.asr.whisper_asr import transcribe_chunk
 
 def load_audio(path: str, target_sr: int = 16000, device: str = "cpu") -> torch.Tensor:
     """Load audio file to a (1, samples) tensor on the specified device."""
-    # Force soundfile backend to completely bypass torchcodec/FFmpeg errors for .wav files!
-    wav, sr = torchaudio.load(path, backend="soundfile")
-    wav = torch.mean(wav, dim=0, keepdim=True)  # stereo → mono
-    if sr != target_sr:
-        resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr)
-        wav = resampler(wav)
-    return wav.to(device)
+    wav, sr = sf.read(path, dtype="float32")
+    # sf.read returns (samples, channels). Our ingestion step guarantees 16kHz mono
+    # But just to be safe, if it's 1D, add channel dimension
+    wav_tensor = torch.from_numpy(wav)
+    if wav_tensor.ndim == 1:
+        wav_tensor = wav_tensor.unsqueeze(0)
+    elif wav_tensor.ndim == 2:
+        wav_tensor = wav_tensor.transpose(0, 1)
+        wav_tensor = torch.mean(wav_tensor, dim=0, keepdim=True)
+    
+    return wav_tensor.to(device)
 
 
 def extract_chunk(
