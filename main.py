@@ -74,7 +74,7 @@ def run_asr_diarization(
     language_asr: str,
     device: str,
 ) -> list[dict]:
-    from pipeline.asr.indic_conformer import load_asr_model
+    from pipeline.asr.whisper_asr import load_asr_model
     from pipeline.diarization.pyannote_diarizer import diarize, load_diarization_pipeline
     from pipeline.transcript.builder import build_transcript
 
@@ -289,8 +289,8 @@ def parse_args():
         help=f"Source language code. Supported: {list(LANGUAGE_MAP.keys())}"
     )
     parser.add_argument(
-        "--output_dir", default="./outputs",
-        help="Directory for all outputs (default: ./outputs)"
+        "--output_dir", default=None,
+        help="Directory for all outputs (defaults to ./outputs/run_<timestamp>)"
     )
     parser.add_argument(
         "--skip_combine",     action="store_true",
@@ -313,4 +313,8 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+    if args.output_dir is None:
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        args.output_dir = f"./outputs/run_{timestamp}"
     asyncio.run(pipeline(args))

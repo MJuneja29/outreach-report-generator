@@ -16,7 +16,7 @@ import json
 import torch
 import torchaudio
 
-from pipeline.asr.indic_conformer import transcribe_chunk
+from pipeline.asr.whisper_asr import transcribe_chunk
 
 
 # =============================================================================
