@@ -25,7 +25,8 @@ from pipeline.asr.whisper_asr import transcribe_chunk
 
 def load_audio(path: str, target_sr: int = 16000, device: str = "cpu") -> torch.Tensor:
     """Load audio file to a (1, samples) tensor on the specified device."""
-    wav, sr = torchaudio.load(path)
+    # Force soundfile backend to completely bypass torchcodec/FFmpeg errors for .wav files!
+    wav, sr = torchaudio.load(path, backend="soundfile")
     wav = torch.mean(wav, dim=0, keepdim=True)  # stereo → mono
     if sr != target_sr:
         resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr)
