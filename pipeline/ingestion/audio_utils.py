@@ -94,12 +94,14 @@ def combine_audio(
     total_duration = combined.shape[1] / target_sr
     print(f"\nCombined duration: {total_duration:.2f}s")
 
-    # Write using soundfile to completely bypass torchaudio.save
-    sf.write(
-        output_path,
-        combined.squeeze(0).numpy(),
-        target_sr,
-        subtype="PCM_16",
+    # Export using PyDub to completely bypass any C level libsndfile errors
+    audio_data = (combined.squeeze(0).numpy() * 32767.0).clip(-32768, 32767).astype(np.int16)
+    seg = AudioSegment(
+        audio_data.tobytes(),
+        frame_rate=target_sr,
+        sample_width=2,
+        channels=1
     )
+    seg.export(output_path, format="wav")
     print(f"Saved → {output_path}")
     return output_path
