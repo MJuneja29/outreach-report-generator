@@ -32,6 +32,12 @@ import os
 
 from dotenv import load_dotenv
 
+# Force HuggingFace to use local VM cache strictly and disable all internet downloads
+os.environ["HF_HOME"] = "/models/huggingface"
+os.environ["HF_HUB_CACHE"] = "/models/huggingface"
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 # Load .env before any pipeline module is imported so all os.getenv() calls
 # across the codebase see the variables without needing their own load_dotenv()
 load_dotenv()

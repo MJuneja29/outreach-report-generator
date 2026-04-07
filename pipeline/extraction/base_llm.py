@@ -12,8 +12,7 @@ import torch
 from rapidfuzz import fuzz
 from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
 
-# Pointing strictly to local VM cache volume to bypass downloading huggingface weights
-MODEL_ID = "/models/huggingface/models--mistralai--Mistral-7B-Instruct-v0.3/snapshots/c170c708c41dac9275d15a8fff4eca08d52bab71"
+MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3"
 log = logging.getLogger(__name__)
 
 

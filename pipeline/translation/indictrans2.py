@@ -31,7 +31,7 @@ MODEL_ID = "ai4bharat/indictrans2-indic-en-1B"
 class IndicTrans2Translator:
 
     def __init__(self, device: str = "cuda", model_id: str = MODEL_ID):
-        token = os.getenv("HF_TOKEN") 
+        token = "enter the token"
         self.device = device
 
         print(f"Loading IndicTrans2 ({model_id}) on {device}...")
