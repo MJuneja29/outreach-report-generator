@@ -42,6 +42,23 @@ os.environ["TRANSFORMERS_OFFLINE"] = "1"
 # across the codebase see the variables without needing their own load_dotenv()
 load_dotenv()
 
+def _repair_hf_cache():
+    """Fix LocalEntryNotFoundError on manually copied HF caches by regenerating missing refs/main"""
+    import glob
+    for model_path in glob.glob("/models/huggingface/models--*"):
+        snapshots_dir = os.path.join(model_path, "snapshots")
+        refs_dir = os.path.join(model_path, "refs")
+        if os.path.isdir(snapshots_dir):
+            hashes = os.listdir(snapshots_dir)
+            if hashes:
+                os.makedirs(refs_dir, exist_ok=True)
+                with open(os.path.join(refs_dir, "main"), "w") as f:
+                    f.write(hashes[0])
+try:
+    _repair_hf_cache()
+except Exception:
+    pass
+
 import torch
 
 logging.basicConfig(
